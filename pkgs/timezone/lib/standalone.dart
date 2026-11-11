@@ -50,8 +50,6 @@ Future<List<int>> _loadAsBytes(String path) async {
       final request = await client.getUrl(uri);
       final response = await request.close();
       if (response.statusCode != HttpStatus.ok) {
-        // Drain the failed response so the connection can be cleaned up.
-        await response.drain<void>();
         throw HttpException(
           'Timezone database request returned HTTP ${response.statusCode}',
           uri: uri,
@@ -63,7 +61,7 @@ Future<List<int>> _loadAsBytes(String path) async {
       }
       return builder.takeBytes();
     } finally {
-      client.close();
+      client.close(force: true);
     }
   }
 
@@ -71,10 +69,7 @@ Future<List<int>> _loadAsBytes(String path) async {
     Uri(scheme: 'package', path: 'timezone/$path'),
   );
   if (uri == null) {
-    throw FileSystemException(
-      'Cannot resolve timezone package data URI',
-      path,
-    );
+    throw FileSystemException('Cannot resolve timezone package data URI', path);
   }
   return File(p.fromUri(uri)).readAsBytes();
 }

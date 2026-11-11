@@ -1,7 +1,3 @@
-## Unreleased
-
-- Close HTTP clients in standalone initialization and report missing timezone assets with a clear error.
-
 ## 0.11.2
 
 - Update timezone database to 2026c.
