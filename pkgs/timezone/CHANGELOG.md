@@ -1,3 +1,7 @@
+## Unreleased
+
+- Parse timestamps without an explicit UTC offset as wall-clock times in the requested `Location`.
+
 ## 0.11.2
 
 - Update timezone database to 2026c.
