@@ -60,6 +60,36 @@ void main() {
       expect(() => tzdbDeserialize(bytes).toList(), throwsFormatException);
     });
 
+    test('rejects out-of-order or duplicate transition times', () {
+      final sequential = LocationDatabase()
+        ..add(
+          Location(
+            'Test/Two',
+            [100000, 200000],
+            [0, 0],
+            [const TimeZone(
+              Duration(hours: 2),
+              isDst: false,
+              abbreviation: 'TZ',
+            )],
+          ),
+        );
+      final bytes = Uint8List.fromList(tzdbSerialize(sequential));
+      final data = ByteData.sublistView(bytes);
+      final offset = data.getUint32(8 + 24);
+      // A duplicate timestamp violates the binary-search precondition.
+      data.setFloat64(8 + offset + 8, 100);
+      expect(() => tzdbDeserialize(bytes).toList(), throwsFormatException);
+    });
+
+    test('rejects fractional transition timestamps', () {
+      final bytes = encoded();
+      final data = ByteData.sublistView(bytes);
+      final offset = data.getUint32(8 + 24);
+      data.setFloat64(8 + offset, 123.5);
+      expect(() => tzdbDeserialize(bytes).toList(), throwsFormatException);
+    });
+
     test('rejects sections that overlap earlier data', () {
       final bytes = encoded();
       final data = ByteData.sublistView(bytes);
