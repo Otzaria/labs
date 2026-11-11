@@ -64,8 +64,34 @@ void main() {
       dateTo: march,
     );
     final location = filtered.db.get('Test/future');
-    expect(location.transitionAt, isEmpty);
+    expect(location.transitionAt, [minTime]);
+    expect(location.transitionZone, [0]);
     expect(location.timeZone(march), winter);
+  });
+
+  test('pre-first zone is retained even if first transition is DST', () {
+    final source = LocationDatabase()
+      ..add(
+        Location(
+          'Test/summer-first',
+          [march, october],
+          [0, 1],
+          [summer, winter],
+        ),
+      );
+    final february = DateTime.utc(2026, 2).millisecondsSinceEpoch;
+    final july = DateTime.utc(2026, 7).millisecondsSinceEpoch;
+    final original = source.get('Test/summer-first');
+    expect(original.timeZone(february), winter);
+    final location = filterTimeZoneData(
+      source,
+      dateFrom: february,
+      dateTo: july,
+    ).db.get('Test/summer-first');
+    expect(location.transitionAt, [minTime, march]);
+    expect(location.transitionZone, [1, 0]);
+    expect(location.timeZone(february), winter);
+    expect(location.timeZone(march), summer);
   });
 
   test('transitionless locations are included in report', () {
