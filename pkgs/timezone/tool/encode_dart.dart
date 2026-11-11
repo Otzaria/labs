@@ -62,8 +62,6 @@ import '../src/exceptions.dart';
 /// Throws [TimeZoneInitException] when something is wrong.
 void initializeTimeZones() {
   try {
-    // latin1.encode creates Uint8List directly, without a temporary
-    // List<int> containing each code unit of this embedded byte string.
     initializeDatabase(latin1.encode(_embeddedData));
   }
   // ignore: avoid_catches_without_on_clauses
