@@ -86,13 +86,11 @@ FilteredLocationDatabase filterTimeZoneData(
 /// Convert [tzfile.Location] to [Location]
 Location tzfileLocationToNativeLocation(tzfile.Location loc) {
   // convert to milliseconds
-  final transitionAt = loc.transitionAt
-      .map(
-        (i) => (i < -_maxSecondsSinceEpoch)
-            ? -_maxMillisecondsSinceEpoch
-            : i * 1000,
-      )
-      .toList();
+  final transitionAt = loc.transitionAt.map((seconds) {
+    if (seconds < -_maxSecondsSinceEpoch) return -_maxMillisecondsSinceEpoch;
+    if (seconds > _maxSecondsSinceEpoch) return _maxMillisecondsSinceEpoch;
+    return seconds * 1000;
+  }).toList();
 
   final zones = <TimeZone>[];
 
