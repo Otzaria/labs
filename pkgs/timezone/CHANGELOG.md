@@ -1,3 +1,7 @@
+## Unreleased
+
+- Improve time zone lookup performance with binary-search cache initialization and an allocation-free TimeZone hot path.
+
 ## 0.11.2
 
 - Update timezone database to 2026c.
