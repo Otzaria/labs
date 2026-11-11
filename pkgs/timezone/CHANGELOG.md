@@ -8,6 +8,7 @@
 - Close standalone HTTP clients and report unsuccessful database downloads.
 - Use UTC for filtered database generation and handle refresh failures.
 - Speed up embedded database decoding in AOT builds.
+- Regenerate the 2026e 10-year database with the corrected initial offsets.
 
 ## 0.11.2
 
