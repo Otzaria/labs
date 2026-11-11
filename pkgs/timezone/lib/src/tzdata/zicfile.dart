@@ -104,16 +104,19 @@ String _readByteString(Uint8List data, int offset) {
     if (byte == 0) break;
     throw FormatException('Not ASCII', data, i);
   }
+  if (i == data.length) {
+    throw InvalidZoneInfoDataException('Unterminated TZif abbreviation');
+  }
   return String.fromCharCodes(data, offset, i);
 }
 
-/// This exception is thrown when Zone Info data is invalid.
 void _requireRange(int offset, int length, int size) {
   if (offset < 0 || length < 0 || offset > size || length > size - offset) {
     throw InvalidZoneInfoDataException('Truncated or malformed TZif data');
   }
 }
 
+/// This exception is thrown when Zone Info data is invalid.
 class InvalidZoneInfoDataException implements Exception {
   final String msg;
 
@@ -265,8 +268,11 @@ class Location {
 
         for (var i = 0; i < header.tzh_typecnt; i++) {
           final tt_gmtoff = bdata.getInt32(offset);
-          final tt_isdst = bdata.getInt8(offset + 4);
+          final tt_isdst = bdata.getUint8(offset + 4);
           final tt_abbrind = bdata.getUint8(offset + 5);
+          if (tt_isdst > 1) {
+            throw InvalidZoneInfoDataException('Invalid TZif DST flag');
+          }
           offset += 6;
 
           zones.add(
@@ -412,8 +418,11 @@ class Location {
 
         for (var i = 0; i < header2.tzh_typecnt; i++) {
           final tt_gmtoff = bdata.getInt32(offset);
-          final tt_isdst = bdata.getInt8(offset + 4);
+          final tt_isdst = bdata.getUint8(offset + 4);
           final tt_abbrind = bdata.getUint8(offset + 5);
+          if (tt_isdst > 1) {
+            throw InvalidZoneInfoDataException('Invalid TZif DST flag');
+          }
           offset += 6;
 
           zones.add(
