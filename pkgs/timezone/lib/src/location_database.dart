@@ -48,10 +48,10 @@ class LocationDatabase {
   /// Clears the database of all [Location] entries.
   void clear() => _locations.clear();
 
-  /// Returns whether the database is empty, or has [Location] entries.
-  @Deprecated("Use 'isInitialized' instead")
-  bool get isEmpty => isInitialized;
+  /// Returns whether the database contains no [Location] entries.
+  @Deprecated("Use '!isInitialized' instead")
+  bool get isEmpty => _locations.isEmpty;
 
-  /// Returns whether the database is empty, or has [Location] entries.
+  /// Returns whether the database contains any [Location] entries.
   bool get isInitialized => _locations.isNotEmpty;
 }
