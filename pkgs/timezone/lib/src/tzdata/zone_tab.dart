@@ -30,11 +30,17 @@ class LocationDescription {
 
   factory LocationDescription.fromString(String line) {
     final parts = line.split('\t');
+    if (parts.length < 3 || parts[0].isEmpty || parts[2].isEmpty) {
+      throw FormatException('Invalid zone.tab record', line);
+    }
     final countryCodes = parts[0].split(',');
     final name = parts[2];
     final comments = parts.length > 3 ? parts[3] : '';
 
-    final match = _geoLocationRe.firstMatch(parts[1])!;
+    final match = _geoLocationRe.firstMatch(parts[1]);
+    if (match == null) {
+      throw FormatException('Invalid zone.tab coordinates', line);
+    }
     final latSign = match.group(1) == '+' ? 1 : -1;
     final latDeg = int.parse(match.group(2)!);
     final latMinutes = int.parse(match.group(3)!);
@@ -50,6 +56,17 @@ class LocationDescription {
     final latitude = latSign * (latDeg + (latMinutes + (latSeconds / 60)) / 60);
     final longitude =
         longSign * (longDeg + (longMinutes + (longSeconds / 60)) / 60);
+
+    if (latDeg > 90 ||
+        longDeg > 180 ||
+        latMinutes >= 60 ||
+        latSeconds >= 60 ||
+        longMinutes >= 60 ||
+        longSeconds >= 60 ||
+        latitude.abs() > 90 ||
+        longitude.abs() > 180) {
+      throw FormatException('Out-of-range zone.tab coordinates', line);
+    }
 
     return LocationDescription(
       name,
@@ -70,7 +87,7 @@ class LocationDescriptionDatabase {
     final lines = data.replaceAll('\r\n', '\n').split('\n');
     final locations = <LocationDescription>[];
     for (final line in lines) {
-      if (line.isEmpty || line[0].startsWith('#')) {
+      if (line.trim().isEmpty || line.trimLeft().startsWith('#')) {
         continue;
       }
       locations.add(LocationDescription.fromString(line));
