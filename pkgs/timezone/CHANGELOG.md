@@ -6,6 +6,7 @@
 - Correct TZif section parsing and validate truncated or malformed records.
 - Validate zone.tab coordinates and preserve time zone offsets at DateTime limits.
 - Close standalone HTTP clients and report unsuccessful database downloads.
+- Use UTC for filtered database generation and handle refresh failures.
 
 ## 0.11.2
 
