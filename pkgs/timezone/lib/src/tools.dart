@@ -77,9 +77,7 @@ FilteredLocationDatabase filterTimeZoneData(
       newTransitionZone.add(l.zones.indexOf(l.timeZone(dateFrom)));
     }
 
-    for (var i = lo;
-        i < transitionCount && l.transitionAt[i] <= dateTo;
-        i++) {
+    for (var i = lo; i < transitionCount && l.transitionAt[i] <= dateTo; i++) {
       newTransitionAt.add(l.transitionAt[i]);
       newTransitionZone.add(l.transitionZone[i]);
     }

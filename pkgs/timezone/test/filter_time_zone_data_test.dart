@@ -1,3 +1,7 @@
+// Copyright (c) 2014, the timezone project authors. Please see the AUTHORS
+// file for details. All rights reserved. Use of this source code is governed
+// by a BSD-style license that can be found in the LICENSE file.
+
 @TestOn('vm')
 library;
 
@@ -11,21 +15,15 @@ void main() {
     isDst: false,
     abbreviation: 'IST',
   );
-  const summer = TimeZone(
-    Duration(hours: 3),
-    isDst: true,
-    abbreviation: 'IDT',
-  );
+  const summer = TimeZone(Duration(hours: 3), isDst: true, abbreviation: 'IDT');
   final march = DateTime.utc(2026, 3, 27).millisecondsSinceEpoch;
   final october = DateTime.utc(2026, 10, 25).millisecondsSinceEpoch;
   final db = LocationDatabase()
     ..add(
-      Location(
-        'Asia/Jerusalem',
-        [minTime, march, october],
-        [0, 1, 0],
-        [winter, summer],
-      ),
+      Location('Asia/Jerusalem', [minTime, march, october], [0, 1, 0], [
+        winter,
+        summer,
+      ]),
     )
     ..add(Location('Test/fixed', [], [], [winter]));
 
@@ -44,11 +42,7 @@ void main() {
   });
 
   test('exact transition boundary uses newly active time zone', () {
-    final filtered = filterTimeZoneData(
-      db,
-      dateFrom: march,
-      dateTo: march,
-    );
+    final filtered = filterTimeZoneData(db, dateFrom: march, dateTo: march);
     final location = filtered.db.get('Asia/Jerusalem');
     expect(location.transitionAt, [minTime]);
     expect(location.transitionZone, [1]);
@@ -58,11 +52,7 @@ void main() {
   test('range before first transition preserves the initial zone', () {
     final future = Location('Test/future', [october], [1], [winter, summer]);
     final source = LocationDatabase()..add(future);
-    final filtered = filterTimeZoneData(
-      source,
-      dateFrom: march,
-      dateTo: march,
-    );
+    final filtered = filterTimeZoneData(source, dateFrom: march, dateTo: march);
     final location = filtered.db.get('Test/future');
     expect(location.transitionAt, [minTime]);
     expect(location.transitionZone, [0]);
@@ -72,12 +62,10 @@ void main() {
   test('pre-first zone is retained even if first transition is DST', () {
     final source = LocationDatabase()
       ..add(
-        Location(
-          'Test/summer-first',
-          [march, october],
-          [0, 1],
-          [summer, winter],
-        ),
+        Location('Test/summer-first', [march, october], [0, 1], [
+          summer,
+          winter,
+        ]),
       );
     final february = DateTime.utc(2026, 2).millisecondsSinceEpoch;
     final july = DateTime.utc(2026, 7).millisecondsSinceEpoch;
@@ -95,10 +83,7 @@ void main() {
   });
 
   test('transitionless locations are included in report', () {
-    final filtered = filterTimeZoneData(
-      db,
-      locations: ['Test/fixed'],
-    );
+    final filtered = filterTimeZoneData(db, locations: ['Test/fixed']);
     expect(filtered.report.newLocationsCount, 1);
     expect(filtered.report.newTransitionsCount, 0);
     expect(filtered.db.get('Test/fixed').timeZone(march), winter);

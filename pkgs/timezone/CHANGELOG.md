@@ -1,7 +1,3 @@
-## Unreleased
-
-- Preserve the active UTC offset and accurate transition boundaries when filtering time zone databases.
-
 ## 0.11.2
 
 - Update timezone database to 2026c.
