@@ -81,10 +81,11 @@ Future<void> main(List<String> arguments) async {
   logReport(commonDb.report);
 
   log.info('- [+- 5 years] from common locations');
+  final year = DateTime.now().toUtc().year;
   final common10yDb = filterTimeZoneData(
     commonDb.db,
-    dateFrom: DateTime.utc(DateTime.now().toUtc().year - 5, 1, 1).millisecondsSinceEpoch,
-    dateTo: DateTime.utc(DateTime.now().toUtc().year + 5, 1, 1).millisecondsSinceEpoch,
+    dateFrom: DateTime.utc(year - 5, 1, 1).millisecondsSinceEpoch,
+    dateTo: DateTime.utc(year + 5, 1, 1).millisecondsSinceEpoch,
     locations: commonLocations,
   );
   logReport(common10yDb.report);

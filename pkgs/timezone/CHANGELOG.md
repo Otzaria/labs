@@ -1,7 +1,3 @@
-## Unreleased
-
-- Make timezone data regeneration deterministic across local host time zones and robust against failed downloads.
-
 ## 0.11.2
 
 - Update timezone database to 2026c.

@@ -59,7 +59,6 @@ Future<String> downloadTzData(String version, String dest) async {
     final req = await client.getUrl(uri);
     final resp = await req.close();
     if (resp.statusCode != HttpStatus.ok) {
-      await resp.drain<void>();
       throw HttpException(
         'IANA tzdb download failed: HTTP ${resp.statusCode}',
         uri: uri,
@@ -73,7 +72,7 @@ Future<String> downloadTzData(String version, String dest) async {
       await sink.close();
     }
   } finally {
-    client.close();
+    client.close(force: true);
   }
   return outPath;
 }
@@ -185,10 +184,11 @@ Future<void> main(List<String> arguments) async {
   logReport(commonDb.report);
 
   log.info('- [+- 5 years] from common locations');
+  final year = DateTime.now().toUtc().year;
   final common10yDb = filterTimeZoneData(
     commonDb.db,
-    dateFrom: DateTime.utc(DateTime.now().toUtc().year - 5, 1, 1).millisecondsSinceEpoch,
-    dateTo: DateTime.utc(DateTime.now().toUtc().year + 5, 1, 1).millisecondsSinceEpoch,
+    dateFrom: DateTime.utc(year - 5, 1, 1).millisecondsSinceEpoch,
+    dateTo: DateTime.utc(year + 5, 1, 1).millisecondsSinceEpoch,
     locations: commonLocations,
   );
   logReport(common10yDb.report);

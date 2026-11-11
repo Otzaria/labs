@@ -1,7 +1,7 @@
 #! /bin/bash
 set -euo pipefail
 
-[[ $0 != 'tool/refresh.sh' ]] && echo "Must be run as tool/refresh.sh" && exit
+cd -- "$(dirname -- "$0")/.."
 
 dart pub get
 
@@ -12,7 +12,8 @@ pushd "$temp" > /dev/null
 
 echo "Fetching latest database..."
 curl --fail --location --show-error --silent --retry 3 \
-  https://data.iana.org/time-zones/tzdata-latest.tar.gz | tar -zx
+  --output tzdata.tar.gz https://data.iana.org/time-zones/tzdata-latest.tar.gz
+tar -zxf tzdata.tar.gz
 
 tz_version=$(cat version)
 echo "Detected timezone database version: $tz_version"
@@ -38,7 +39,7 @@ const List<String> commonLocations = [
 EOF
 
 # Extract 'Zone' lines, take the ID (column 2), wrap in quotes, and sort
-awk '/^Zone/ { print "  \x27" $2 "\x27," }' rearguard.zi | sort -u >> "$target_file"
+awk '/^Zone/ { print "  \x27" $2 "\x27," }' rearguard.zi | LC_ALL=C sort -u >> "$target_file"
 
 # Close the Set
 echo "];" >> "$target_file"
