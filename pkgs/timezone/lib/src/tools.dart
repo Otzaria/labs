@@ -30,9 +30,12 @@ FilteredLocationDatabase filterTimeZoneData(
   int dateTo = TZDateTime.maxMillisecondsSinceEpoch,
   List<String> locations = const [],
 }) {
+  if (dateFrom > dateTo) {
+    throw ArgumentError('dateFrom must not be after dateTo');
+  }
+
   final report = FilterReport();
   final result = LocationDatabase();
-
   final locationsSet = HashSet<String>.from(locations);
 
   report.originalLocationsCount = db.locations.length;
@@ -42,40 +45,44 @@ FilteredLocationDatabase filterTimeZoneData(
       continue;
     }
 
-    final transitionsCount = l.transitionAt.length;
-    report.originalTransitionsCount += transitionsCount;
+    final transitionCount = l.transitionAt.length;
+    report.originalTransitionsCount += transitionCount;
 
     final newTransitionAt = <int>[];
     final newTransitionZone = <int>[];
 
-    if (transitionsCount == 0) {
-      result.add(Location(l.name, newTransitionAt, newTransitionZone, l.zones));
-      continue;
-    }
-
-    var i = 0;
-
-    while (i < transitionsCount && dateFrom > l.transitionAt[i]) {
-      i++;
-    }
-
-    if (i < transitionsCount) {
-      newTransitionAt.add(TZDateTime.minMillisecondsSinceEpoch);
-      newTransitionZone.add(l.transitionZone[i]);
-      i++;
-      report.newTransitionsCount++;
-
-      while (i < transitionsCount && l.transitionAt[i] <= dateTo) {
-        newTransitionAt.add(l.transitionAt[i]);
-        newTransitionZone.add(l.transitionZone[i]);
-        i++;
-        report.newTransitionsCount++;
+    // Locate the first transition strictly after dateFrom. The state at
+    // dateFrom is determined by the *previous* transition, not the next one.
+    // Retaining that state at minTime lets the trimmed database answer
+    // queries at the beginning of the requested window correctly.
+    var lo = 0;
+    var hi = transitionCount;
+    while (lo < hi) {
+      final mid = lo + (hi - lo) ~/ 2;
+      if (l.transitionAt[mid] <= dateFrom) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
       }
-    } else {
-      newTransitionAt.add(TZDateTime.minMillisecondsSinceEpoch);
-      newTransitionZone.add(l.transitionZone[i - 1]);
     }
 
+    if (lo > 0) {
+      newTransitionAt.add(TZDateTime.minMillisecondsSinceEpoch);
+      newTransitionZone.add(l.transitionZone[lo - 1]);
+    } else if (transitionCount > 0 && dateFrom < l.transitionAt.first) {
+      // The state before the first transition is not necessarily zones[0].
+      // It depends on the original transition list's DST fallback rules.
+      // Preserve it explicitly even when filtering out later transitions.
+      newTransitionAt.add(TZDateTime.minMillisecondsSinceEpoch);
+      newTransitionZone.add(l.zones.indexOf(l.timeZone(dateFrom)));
+    }
+
+    for (var i = lo; i < transitionCount && l.transitionAt[i] <= dateTo; i++) {
+      newTransitionAt.add(l.transitionAt[i]);
+      newTransitionZone.add(l.transitionZone[i]);
+    }
+
+    report.newTransitionsCount += newTransitionAt.length;
     result.add(Location(l.name, newTransitionAt, newTransitionZone, l.zones));
     report.newLocationsCount++;
   }
@@ -85,15 +92,6 @@ FilteredLocationDatabase filterTimeZoneData(
 
 /// Convert [tzfile.Location] to [Location]
 Location tzfileLocationToNativeLocation(tzfile.Location loc) {
-  // convert to milliseconds
-  final transitionAt = loc.transitionAt
-      .map(
-        (i) => (i < -_maxSecondsSinceEpoch)
-            ? -_maxMillisecondsSinceEpoch
-            : i * 1000,
-      )
-      .toList();
-
   final zones = <TimeZone>[];
 
   for (final z in loc.zones) {
@@ -106,5 +104,33 @@ Location tzfileLocationToNativeLocation(tzfile.Location loc) {
     );
   }
 
-  return Location(loc.name, transitionAt, loc.transitionZone, zones);
+  final transitionAt = <int>[];
+  final transitionZone = <int>[];
+  int? initialZone;
+  for (var i = 0; i < loc.transitionAt.length; i++) {
+    final seconds = loc.transitionAt[i];
+    if (seconds <= -_maxSecondsSinceEpoch) {
+      initialZone = loc.transitionZone[i];
+    } else if (seconds <= _maxSecondsSinceEpoch) {
+      transitionAt.add(seconds * 1000);
+      transitionZone.add(loc.transitionZone[i]);
+    } else {
+      // Later transitions can influence the fallback before the first one.
+      if (initialZone == null) {
+        final source = Location(
+          loc.name,
+          loc.transitionAt,
+          loc.transitionZone,
+          zones,
+        );
+        initialZone = zones.indexOf(source.timeZone(-_maxSecondsSinceEpoch));
+      }
+      break;
+    }
+  }
+  if (initialZone != null) {
+    transitionAt.insert(0, -_maxMillisecondsSinceEpoch);
+    transitionZone.insert(0, initialZone);
+  }
+  return Location(loc.name, transitionAt, transitionZone, zones);
 }
