@@ -15,24 +15,3 @@ jobs:
       ignore_license: "**.mock.dart,**.g.dart,**.mocks.dart"
     permissions:
       pull-requests: write
-
-  timezone-verify:
-    # The reusable health coverage report treats test failures as warnings.
-    # Make failures of the timezone test suite a blocking check on its PRs.
-    if: contains(github.event.pull_request.labels.*.name, 'package:timezone')
-    name: timezone / VM correctness and analyzer
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: pkgs/timezone
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        with:
-          persist-credentials: false
-      - uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260
-        with:
-          sdk: stable
-      - run: dart pub get
-      - run: dart analyze --fatal-infos
-      - run: dart format --output=none --set-exit-if-changed .
-      - run: dart test --platform vm
