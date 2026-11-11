@@ -1,7 +1,3 @@
-## Unreleased
-
-- Reduce transient memory allocations when initializing embedded timezone databases by using direct Latin-1 to byte conversion.
-
 ## 0.11.2
 
 - Update timezone database to 2026c.

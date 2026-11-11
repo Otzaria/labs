@@ -17,8 +17,10 @@ void main() {
     full_data.initializeTimeZones();
     timer.stop();
     durations.add(timer.elapsedMicroseconds);
-    print('run ${i + 1}: ${durations.last} us, '
-        'RSS ${ProcessInfo.currentRss} bytes');
+    print(
+      'run ${i + 1}: ${durations.last} us, '
+      'RSS ${ProcessInfo.currentRss} bytes',
+    );
   }
   // Ignore the first run while the Dart runtime warms up.
   final measured = durations.skip(1).toList()..sort();
