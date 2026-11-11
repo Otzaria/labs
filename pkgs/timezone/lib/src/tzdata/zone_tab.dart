@@ -10,7 +10,7 @@ library;
 /// either +-DDMM+-DDDMM or +-DDMMSS+-DDDMMSS,
 /// first latitude (+ is north), then longitude (+ is east).
 final _geoLocationRe = RegExp(
-  r'^([+\-])(\d{2,3})(\d{2})(\d{2})?([+\-])(\d{2,3})(\d{2})(\d{2})?$',
+  r'^([+\-])(\d{2})(\d{2})(\d{2})?([+\-])(\d{3})(\d{2})(\d{2})?$',
 );
 
 class LocationDescription {
@@ -51,6 +51,9 @@ class LocationDescription {
     final longDeg = int.parse(match.group(6)!);
     final longMinutes = int.parse(match.group(7)!);
     final longSecondsRaw = match.group(8);
+    if ((latSecondsRaw == null) != (longSecondsRaw == null)) {
+      throw FormatException('Invalid zone.tab coordinates', line);
+    }
     final longSeconds = longSecondsRaw != null ? int.parse(longSecondsRaw) : 0;
 
     final latitude = latSign * (latDeg + (latMinutes + (latSeconds / 60)) / 60);

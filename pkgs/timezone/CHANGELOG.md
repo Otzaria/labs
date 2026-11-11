@@ -1,7 +1,3 @@
-## Unreleased
-
-- Validate zone.tab coordinates and clamp extreme timezone transitions to supported DateTime limits.
-
 ## 0.11.2
 
 - Update timezone database to 2026c.
