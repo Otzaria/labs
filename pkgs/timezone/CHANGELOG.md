@@ -2,6 +2,7 @@
 
 - Speed up time zone lookups while preserving existing Location behavior.
 - Preserve the active time zone offset at the start of filtered data.
+- Validate serialized database entries and replace the active database atomically.
 
 ## 0.11.2
 
