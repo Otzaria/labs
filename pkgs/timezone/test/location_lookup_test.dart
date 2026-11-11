@@ -1,3 +1,7 @@
+// Copyright (c) 2014, the timezone project authors. Please see the AUTHORS
+// file for details. All rights reserved. Use of this source code is governed
+// by a BSD-style license that can be found in the LICENSE file.
+
 @TestOn('vm')
 library;
 
@@ -10,21 +14,15 @@ void main() {
     isDst: false,
     abbreviation: 'IST',
   );
-  const summer = TimeZone(
-    Duration(hours: 3),
-    isDst: true,
-    abbreviation: 'IDT',
-  );
+  const summer = TimeZone(Duration(hours: 3), isDst: true, abbreviation: 'IDT');
 
   test('timeZone agrees with lookupTimeZone across transition boundaries', () {
     final first = DateTime.utc(2026, 3, 27).millisecondsSinceEpoch;
     final second = DateTime.utc(2026, 10, 25).millisecondsSinceEpoch;
-    final location = Location(
-      'test/jerusalem',
-      [first, second],
-      [1, 0],
-      [winter, summer],
-    );
+    final location = Location('test/jerusalem', [first, second], [1, 0], [
+      winter,
+      summer,
+    ]);
     for (final timestamp in [
       minTime,
       first - 1,
@@ -46,6 +44,19 @@ void main() {
     expect(location.timeZone(second), winter);
   });
 
+  test('timeZone honors overrides of lookupTimeZone', () {
+    expect(_CustomLocation(winter).timeZone(0), winter);
+  });
+
+  test('pre-transition lookups see changes to the supplied zones', () {
+    final zones = [winter];
+    final location = Location('test/mutable', [], [], zones);
+    expect(location.timeZone(0), winter);
+    zones[0] = summer;
+    expect(location.timeZone(0), summer);
+    expect(location.lookupTimeZone(0).timeZone, summer);
+  });
+
   test('cached current interval matches its exact transition boundaries', () {
     final now = DateTime.now().millisecondsSinceEpoch;
     final location = Location(
@@ -60,23 +71,33 @@ void main() {
     expect(location.timeZone(now + 60000), summer);
   });
 
-  test('pre-first and transitionless locations preserve their initial zone', () {
-    final later = DateTime.utc(2035).millisecondsSinceEpoch;
-    final beforeFirst = Location(
-      'test/pre-first',
-      [later],
-      [1],
-      [winter, summer],
-    );
-    expect(beforeFirst.timeZone(later - 1), winter);
-    expect(beforeFirst.lookupTimeZone(later - 1).timeZone, winter);
-    expect(beforeFirst.timeZone(later), summer);
+  test(
+    'pre-first and transitionless locations preserve their initial zone',
+    () {
+      final later = DateTime.utc(2035).millisecondsSinceEpoch;
+      final beforeFirst = Location('test/pre-first', [later], [1], [
+        winter,
+        summer,
+      ]);
+      expect(beforeFirst.timeZone(later - 1), winter);
+      expect(beforeFirst.lookupTimeZone(later - 1).timeZone, winter);
+      expect(beforeFirst.timeZone(later), summer);
 
-    final fixed = Location('test/fixed', [], [], [winter]);
-    expect(fixed.timeZone(0), winter);
-    expect(fixed.lookupTimeZone(0).timeZone, winter);
-    final empty = Location('test/empty', [], [], []);
-    expect(empty.timeZone(0), TimeZone.UTC);
-    expect(empty.lookupTimeZone(0).timeZone, TimeZone.UTC);
-  });
+      final fixed = Location('test/fixed', [], [], [winter]);
+      expect(fixed.timeZone(0), winter);
+      expect(fixed.lookupTimeZone(0).timeZone, winter);
+      final empty = Location('test/empty', [], [], []);
+      expect(empty.timeZone(0), TimeZone.UTC);
+      expect(empty.lookupTimeZone(0).timeZone, TimeZone.UTC);
+    },
+  );
+}
+
+class _CustomLocation extends Location {
+  _CustomLocation(this.zone) : super('test/custom', [], [], []);
+  final TimeZone zone;
+
+  @override
+  TzInstant lookupTimeZone(int millisecondsSinceEpoch) =>
+      TzInstant(zone, minTime, maxTime);
 }

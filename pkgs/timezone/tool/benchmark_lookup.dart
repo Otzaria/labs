@@ -22,7 +22,7 @@ void main() {
   });
 
   const repetitions = 300000;
-  int checksum = 0;
+  var checksum = 0;
 
   Duration measure(String label, tz.TimeZone Function(int) lookup) {
     for (var i = 0; i < 20000; i++) {

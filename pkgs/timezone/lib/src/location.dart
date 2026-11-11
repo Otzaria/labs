@@ -45,10 +45,6 @@ class Location {
   // since January 1, 1970 UTC, to match the argument
   // to lookup.
   static final int _cacheNow = DateTime.now().millisecondsSinceEpoch;
-  // The transition lists are fixed after database initialization. Cache the
-  // pre-transition zone so old dates do not rescan every transition.
-  late final TimeZone _initialZone =
-      zones.isEmpty ? TimeZone.UTC : _firstZone();
   int _cacheStart = 0;
   int _cacheEnd = 0;
   late TimeZone _cacheZone;
@@ -134,7 +130,7 @@ class Location {
 
     if (transitionAt.isEmpty || millisecondsSinceEpoch < transitionAt.first) {
       return TzInstant(
-        _initialZone,
+        _firstZone(),
         minTime,
         transitionAt.isEmpty ? maxTime : transitionAt.first,
       );
@@ -144,16 +140,15 @@ class Location {
     final end = index + 1 < transitionAt.length
         ? transitionAt[index + 1]
         : maxTime;
-    return TzInstant(
-      zones[transitionZone[index]],
-      transitionAt[index],
-      end,
-    );
+    return TzInstant(zones[transitionZone[index]], transitionAt[index], end);
   }
 
   /// timeZone method returns [TimeZone] in use at an instant in time expressed
   /// as milliseconds since January 1, 1970 00:00:00 UTC.
   TimeZone timeZone(int millisecondsSinceEpoch) {
+    if (runtimeType != Location) {
+      return lookupTimeZone(millisecondsSinceEpoch).timeZone;
+    }
     // This is the hot path for TZDateTime.from and repeated calendar
     // conversions. Avoid allocating a TzInstant just to read its zone.
     if (zones.isEmpty) return TimeZone.UTC;
@@ -162,7 +157,7 @@ class Location {
       return _cacheZone;
     }
     if (transitionAt.isEmpty || millisecondsSinceEpoch < transitionAt.first) {
-      return _initialZone;
+      return _firstZone();
     }
     return zones[transitionZone[_transitionIndex(millisecondsSinceEpoch)]];
   }
