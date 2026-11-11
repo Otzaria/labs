@@ -206,7 +206,7 @@ class Location {
     switch (version1) {
       case 0:
         final header = _Header.fromBytes(
-          Uint8List.sublistView(bdata, offset, _Header.size),
+          Uint8List.sublistView(bdata, offset, offset + _Header.size),
         );
 
         // calculating data offsets
