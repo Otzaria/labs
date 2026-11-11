@@ -1,3 +1,7 @@
+## Unreleased
+
+- Validate malformed serialized timezone data and preserve the existing database on failed initialization.
+
 ## 0.11.2
 
 - Update timezone database to 2026c.
