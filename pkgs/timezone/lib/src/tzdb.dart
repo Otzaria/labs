@@ -223,12 +223,14 @@ Location _deserializeLocation(Uint8List data) {
     throw const FormatException('Malformed tzdb: invalid section layout');
   }
   if (!_allAscii(data, nameOffset, nameOffset + nameLength) ||
-      !_allAscii(data, abbreviationsOffset,
-          abbreviationsOffset + abbreviationsLength)) {
+      !_allAscii(
+        data,
+        abbreviationsOffset,
+        abbreviationsOffset + abbreviationsLength,
+      )) {
     throw const FormatException('Malformed tzdb: non-ASCII text');
   }
 
-  assert(_allAscii(data, nameOffset, nameOffset + nameLength));
   final name = String.fromCharCodes(data, nameOffset, nameOffset + nameLength);
   final abbreviations = <String>[];
   final zones = <TimeZone>[];
@@ -267,9 +269,7 @@ Location _deserializeLocation(Uint8List data) {
     final zoneIsDst = bdata.getUint8(offset + 4);
     final zoneAbbreviationIndex = bdata.getUint8(offset + 5);
     if (zoneIsDst > 1 || zoneAbbreviationIndex >= abbreviations.length) {
-      throw FormatException(
-        'Malformed tzdb: invalid zone entry at index $i',
-      );
+      throw FormatException('Malformed tzdb: invalid zone entry at index $i');
     }
     offset += 8;
     zones.add(
@@ -292,15 +292,13 @@ Location _deserializeLocation(Uint8List data) {
     if (!seconds.isFinite ||
         seconds < -8640000000000 ||
         seconds > 8640000000000) {
-      throw FormatException(
-        'Malformed tzdb: invalid transition at index $i',
-      );
+      throw FormatException('Malformed tzdb: invalid transition at index $i');
     }
     // The serialized format uses whole seconds, and Location lookup relies
-    // on strictly increasing transitions for its binary search.
+    // on nondecreasing transitions for its binary search.
     final milliseconds = seconds.toInt() * 1000;
     if (seconds != seconds.truncateToDouble() ||
-        (transitionAt.isNotEmpty && milliseconds <= transitionAt.last)) {
+        (transitionAt.isNotEmpty && milliseconds < transitionAt.last)) {
       throw FormatException(
         'Malformed tzdb: out-of-order or fractional transition at index $i',
       );

@@ -1,3 +1,7 @@
+// Copyright (c) 2014, the timezone project authors. Please see the AUTHORS
+// file for details. All rights reserved. Use of this source code is governed
+// by a BSD-style license that can be found in the LICENSE file.
+
 @TestOn('vm')
 library;
 
@@ -11,18 +15,9 @@ import 'package:timezone/timezone.dart';
 void main() {
   final sample = LocationDatabase()
     ..add(
-      Location(
-        'Test/Zone',
-        [123000],
-        [0],
-        [
-          const TimeZone(
-            Duration(hours: 2),
-            isDst: false,
-            abbreviation: 'TZ',
-          ),
-        ],
-      ),
+      Location('Test/Zone', [123000], [0], [
+        const TimeZone(Duration(hours: 2), isDst: false, abbreviation: 'TZ'),
+      ]),
     );
 
   Uint8List encoded() => Uint8List.fromList(tzdbSerialize(sample));
@@ -60,25 +55,21 @@ void main() {
       expect(() => tzdbDeserialize(bytes).toList(), throwsFormatException);
     });
 
-    test('rejects out-of-order or duplicate transition times', () {
+    test('rejects out-of-order transition times', () {
       final sequential = LocationDatabase()
         ..add(
-          Location(
-            'Test/Two',
-            [100000, 200000],
-            [0, 0],
-            [const TimeZone(
+          Location('Test/Two', [100000, 200000], [0, 0], [
+            const TimeZone(
               Duration(hours: 2),
               isDst: false,
               abbreviation: 'TZ',
-            )],
-          ),
+            ),
+          ]),
         );
       final bytes = Uint8List.fromList(tzdbSerialize(sequential));
       final data = ByteData.sublistView(bytes);
       final offset = data.getUint32(8 + 24);
-      // A duplicate timestamp violates the binary-search precondition.
-      data.setFloat64(8 + offset + 8, 100);
+      data.setFloat64(8 + offset + 8, 99);
       expect(() => tzdbDeserialize(bytes).toList(), throwsFormatException);
     });
 
@@ -107,17 +98,33 @@ void main() {
     });
   });
 
-  test('failed initialization preserves the previous database and local zone', () {
-    tz_data.initializeTimeZones();
-    final before = getLocation('America/Detroit');
-    setLocalLocation(before);
-    final broken = [...encoded(), 1, 2, 3]; // Truncated second chunk.
-    try {
-      expect(() => initializeDatabase(broken), throwsFormatException);
-      expect(identical(getLocation('America/Detroit'), before), isTrue);
-      expect(identical(local, before), isTrue);
-    } finally {
-      tz_data.initializeTimeZones();
-    }
+  test('preserves transitions rounded to the same second', () {
+    final db = LocationDatabase()
+      ..add(
+        Location('Test/Rounded', [1000, 1999], [0, 1], [
+          TimeZone.UTC,
+          const TimeZone(Duration(hours: 1), isDst: true, abbreviation: 'DST'),
+        ]),
+      );
+    final location = tzdbDeserialize(tzdbSerialize(db)).single;
+    expect(location.transitionAt, [1000, 1000]);
+    expect(location.timeZone(1000).abbreviation, 'DST');
   });
+
+  test(
+    'failed initialization preserves the previous database and local zone',
+    () {
+      tz_data.initializeTimeZones();
+      final before = getLocation('America/Detroit');
+      setLocalLocation(before);
+      final broken = [...encoded(), 1, 2, 3]; // Truncated second chunk.
+      try {
+        expect(() => initializeDatabase(broken), throwsFormatException);
+        expect(identical(getLocation('America/Detroit'), before), isTrue);
+        expect(identical(local, before), isTrue);
+      } finally {
+        tz_data.initializeTimeZones();
+      }
+    },
+  );
 }
