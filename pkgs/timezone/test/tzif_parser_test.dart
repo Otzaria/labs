@@ -109,4 +109,22 @@ void main() {
       throwsA(isA<tzdata.InvalidZoneInfoDataException>()),
     );
   });
+
+  test('invalid DST flag is rejected', () {
+    final bytes = _tzif(0);
+    bytes[44 + 4 + 1 + 4] = 2;
+    expect(
+      () => tzdata.Location.fromBytes('Test/Zone', bytes),
+      throwsA(isA<tzdata.InvalidZoneInfoDataException>()),
+    );
+  });
+
+  test('unterminated abbreviation is rejected', () {
+    final bytes = _tzif(0);
+    bytes[44 + 4 + 1 + 6 + 3] = 65;
+    expect(
+      () => tzdata.Location.fromBytes('Test/Zone', bytes),
+      throwsA(isA<tzdata.InvalidZoneInfoDataException>()),
+    );
+  });
 }
