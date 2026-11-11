@@ -52,7 +52,7 @@ String generateDartFile({
     '''
 // This is a generated file. Do not edit.
 // Timezone data version: $tzVersion
-import 'dart:typed_data';
+import 'dart:convert';
 
 import '../src/env.dart';
 import '../src/exceptions.dart';
@@ -62,8 +62,9 @@ import '../src/exceptions.dart';
 /// Throws [TimeZoneInitException] when something is wrong.
 void initializeTimeZones() {
   try {
-    initializeDatabase(
-        Uint8List.fromList(_embeddedData.codeUnits));
+    // latin1.encode creates Uint8List directly, without a temporary
+    // List<int> containing each code unit of this embedded byte string.
+    initializeDatabase(latin1.encode(_embeddedData));
   }
   // ignore: avoid_catches_without_on_clauses
   catch (e) {
