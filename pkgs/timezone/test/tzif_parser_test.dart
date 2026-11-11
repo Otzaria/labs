@@ -1,3 +1,7 @@
+// Copyright (c) 2014, the timezone project authors. Please see the AUTHORS
+// file for details. All rights reserved. Use of this source code is governed
+// by a BSD-style license that can be found in the LICENSE file.
+
 @TestOn('vm')
 library;
 
@@ -43,10 +47,7 @@ Uint8List _body({required bool extended}) {
     } else {
       data.setInt32(leapOffset + i * leapBytes, (i + 1) * 1000);
     }
-    data.setInt32(
-      leapOffset + i * leapBytes + timeBytes,
-      i + 1,
-    );
+    data.setInt32(leapOffset + i * leapBytes + timeBytes, i + 1);
   }
   bytes[bytes.length - 2] = 1;
   bytes[bytes.length - 1] = 1;

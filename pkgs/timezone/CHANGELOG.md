@@ -1,7 +1,3 @@
-## Unreleased
-
-- Correct TZif leap-second record parsing and validate malformed timezone files.
-
 ## 0.11.2
 
 - Update timezone database to 2026c.

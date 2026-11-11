@@ -250,9 +250,6 @@ class Location {
         final abbreviations = <String>[];
         final abbreviationsCache = HashMap<int, int>();
         int readAbbreviation(int offset) {
-          if (offset < 0 || offset >= abbreviationsData.length) {
-            throw InvalidZoneInfoDataException('Invalid TZif abbreviation');
-          }
           var result = abbreviationsCache[offset];
           if (result == null) {
             result = abbreviations.length;
@@ -400,9 +397,6 @@ class Location {
         final abbreviations = <String>[];
         final abbreviationsCache = HashMap<int, int>();
         int readAbbreviation(int offset) {
-          if (offset < 0 || offset >= abbreviationsData.length) {
-            throw InvalidZoneInfoDataException('Invalid TZif abbreviation');
-          }
           var result = abbreviationsCache[offset];
           if (result == null) {
             result = abbreviations.length;
