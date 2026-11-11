@@ -294,7 +294,25 @@ class TZDateTime implements DateTime {
   /// * `"-123450101 00:00:00 Z"`: in the year -12345.
   /// * `"2002-02-27T14:00:00-0500"`: Same as `"2002-02-27T19:00:00Z"`
   static TZDateTime parse(Location location, String formattedString) {
-    return TZDateTime.from(DateTime.parse(formattedString), location);
+    final parsed = DateTime.parse(formattedString);
+
+    // DateTime.parse returns a UTC DateTime for strings with an explicit
+    // timezone offset or Z suffix, and a local DateTime otherwise. A
+    // timezone-less string describes wall-clock time in [location], *not*
+    // the computer's local timezone. Preserve the instant when an offset
+    // was explicitly provided.
+    if (parsed.isUtc) return TZDateTime.from(parsed, location);
+    return TZDateTime(
+      location,
+      parsed.year,
+      parsed.month,
+      parsed.day,
+      parsed.hour,
+      parsed.minute,
+      parsed.second,
+      parsed.millisecond,
+      parsed.microsecond,
+    );
   }
 
   /// Returns this DateTime value in the UTC time zone.
