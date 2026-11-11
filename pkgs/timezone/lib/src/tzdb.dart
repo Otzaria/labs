@@ -296,7 +296,16 @@ Location _deserializeLocation(Uint8List data) {
         'Malformed tzdb: invalid transition at index $i',
       );
     }
-    transitionAt.add(seconds.toInt() * 1000); // convert to ms
+    // The serialized format uses whole seconds, and Location lookup relies
+    // on strictly increasing transitions for its binary search.
+    final milliseconds = seconds.toInt() * 1000;
+    if (seconds != seconds.truncateToDouble() ||
+        (transitionAt.isNotEmpty && milliseconds <= transitionAt.last)) {
+      throw FormatException(
+        'Malformed tzdb: out-of-order or fractional transition at index $i',
+      );
+    }
+    transitionAt.add(milliseconds);
     offset += 8;
   }
 
