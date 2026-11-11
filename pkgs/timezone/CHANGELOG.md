@@ -1,3 +1,7 @@
+## Unreleased
+
+- Fix the deprecated `LocationDatabase.isEmpty` getter to match its name and the inverse of `isInitialized`.
+
 ## 0.11.2
 
 - Update timezone database to 2026c.
