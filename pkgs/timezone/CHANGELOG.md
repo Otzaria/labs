@@ -1,3 +1,10 @@
+## Unreleased
+
+- Speed up time zone lookups while preserving existing Location behavior.
+- Preserve the active time zone offset at the start of filtered data.
+- Validate serialized database entries and replace the active database atomically.
+- Correct TZif section parsing and validate truncated or malformed records.
+
 ## 0.11.2
 
 - Update timezone database to 2026c.
