@@ -35,7 +35,7 @@ void main() {
   test('conversion clamps transition values outside Dart DateTime limits', () {
     final loc = tzdata.Location(
       'Test/Zone',
-      [-9223372036854775808, 0, 9223372036854775807],
+      [-(1 << 62), 0, 1 << 62],
       [0, 0, 0],
       ['TST'],
       [const tzdata.TimeZone(0, isDst: false, abbreviationIndex: 0)],
