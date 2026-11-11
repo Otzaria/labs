@@ -69,6 +69,12 @@ FilteredLocationDatabase filterTimeZoneData(
     if (lo > 0) {
       newTransitionAt.add(TZDateTime.minMillisecondsSinceEpoch);
       newTransitionZone.add(l.transitionZone[lo - 1]);
+    } else if (transitionCount > 0 && dateFrom < l.transitionAt.first) {
+      // The state before the first transition is not necessarily zones[0].
+      // It depends on the original transition list's DST fallback rules.
+      // Preserve it explicitly even when filtering out later transitions.
+      newTransitionAt.add(TZDateTime.minMillisecondsSinceEpoch);
+      newTransitionZone.add(l.zones.indexOf(l.timeZone(dateFrom)));
     }
 
     for (var i = lo;
